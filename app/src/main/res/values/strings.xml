@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">FilmCatalog</string>
+    <string name="film_name">Film title</string>
+    <string name="film_description">Film description</string>
+    <string name="release_date">release date</string>
+    <string name="search_by_movie_name">Поиск по названию фильма</string>
+    <string name="data_loading_error">Нам не удалось обработать ваш запрос. Попробуйте еще раз</string>
+    <string name="empty_issue_1">По запросу "</string>
+    <string name="empty_issue_2">" ничего не найдено</string>
+</resources>
