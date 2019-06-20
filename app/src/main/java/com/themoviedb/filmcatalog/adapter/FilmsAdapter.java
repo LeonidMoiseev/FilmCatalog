@@ -24,6 +24,7 @@ public class FilmsAdapter extends RecyclerView.Adapter<FilmsAdapter.MyViewHolder
     private Context mContext;
     private List<Film> mListFilms;
     private List<Film> mOriginalValues;
+    private List<Film> filteredArrList;
 
 
     public FilmsAdapter(Context mContext, List<Film> mListFilms) {
@@ -53,6 +54,10 @@ public class FilmsAdapter extends RecyclerView.Adapter<FilmsAdapter.MyViewHolder
     @Override
     public int getItemCount() {
         return mListFilms.size();
+    }
+
+    public int getSizeList() {
+        return filteredArrList.size();
     }
 
     class MyViewHolder extends RecyclerView.ViewHolder {
@@ -87,22 +92,23 @@ public class FilmsAdapter extends RecyclerView.Adapter<FilmsAdapter.MyViewHolder
             @SuppressWarnings("unchecked")
             @Override
             protected void publishResults(CharSequence constraint,FilterResults results) {
-                mListFilms = (List<Film>) results.values; // has the filtered values
-                notifyDataSetChanged();  // notifies the data with new filtered values
+                mListFilms = (List<Film>) results.values;
+                notifyDataSetChanged();
             }
 
             @Override
             protected FilterResults performFiltering(CharSequence constraint) {
-                FilterResults results = new FilterResults();        // Holds the results of a filtering operation in values
-                List<String> FilteredArrList = new ArrayList<>();
+                FilterResults results = new FilterResults();
+                filteredArrList = new ArrayList<>();
+
 
                 if (mOriginalValues == null) {
-                    mOriginalValues = new ArrayList<>(mListFilms); // saves the original data in mOriginalValues
+                    mOriginalValues = new ArrayList<>();
+                    mOriginalValues = mListFilms;
                 }
 
                 if (constraint == null || constraint.length() == 0) {
 
-                    // set the Original result to return
                     results.count = mOriginalValues.size();
                     results.values = mOriginalValues;
                 } else {
@@ -110,12 +116,12 @@ public class FilmsAdapter extends RecyclerView.Adapter<FilmsAdapter.MyViewHolder
                     for (int i = 0; i < mOriginalValues.size(); i++) {
                         String data = mOriginalValues.get(i).getTitle();
                         if (data.toLowerCase().contains(constraint.toString())) {
-                            FilteredArrList.add(data);
+                            filteredArrList.add(mOriginalValues.get(i));
                         }
                     }
-                    // set the Filtered result to return
-                    results.count = FilteredArrList.size();
-                    results.values = FilteredArrList;
+
+                    results.count = filteredArrList.size();
+                    results.values = filteredArrList;
                 }
                 return results;
             }
