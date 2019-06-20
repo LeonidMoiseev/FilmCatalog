@@ -1,6 +1,8 @@
 package com.themoviedb.filmcatalog.adapter;
 
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v7.widget.RecyclerView;
@@ -17,7 +19,9 @@ import com.themoviedb.filmcatalog.R;
 import com.themoviedb.filmcatalog.model.Film;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class FilmsAdapter extends RecyclerView.Adapter<FilmsAdapter.MyViewHolder> implements Filterable {
 
@@ -25,6 +29,11 @@ public class FilmsAdapter extends RecyclerView.Adapter<FilmsAdapter.MyViewHolder
     private List<Film> mListFilms;
     private List<Film> mOriginalValues;
     private List<Film> filteredArrList;
+    private Set<String> favoritesList;
+    private SharedPreferences mFavorites;
+    private SharedPreferences.Editor mEdit;
+
+    private static final String APP_PREFERENCES = "my_favorites";
 
 
     public FilmsAdapter(Context mContext, List<Film> mListFilms) {
@@ -37,6 +46,14 @@ public class FilmsAdapter extends RecyclerView.Adapter<FilmsAdapter.MyViewHolder
     public MyViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
         View view = LayoutInflater.from(viewGroup.getContext())
                 .inflate(R.layout.film_card, viewGroup, false);
+
+        mFavorites = PreferenceManager.getDefaultSharedPreferences(mContext);
+        if (mFavorites.contains(APP_PREFERENCES)) {
+            favoritesList = mFavorites.getStringSet(APP_PREFERENCES, null);
+        } else {
+            favoritesList = new HashSet<>();
+        }
+
         return new MyViewHolder(view);
     }
 
@@ -45,6 +62,9 @@ public class FilmsAdapter extends RecyclerView.Adapter<FilmsAdapter.MyViewHolder
         viewHolder.titleFilm.setText(mListFilms.get(i).getTitle());
         viewHolder.descriptionFilm.setText(mListFilms.get(i).getOverview());
         viewHolder.releaseDateFilm.setText(mListFilms.get(i).getReleaseDate());
+        if (favoritesList.contains(mListFilms.get(i).getTitle())) {
+            viewHolder.favoritesHeart.setBackgroundResource(R.drawable.ic_heart_fill);
+        }
 
         Glide.with(mContext)
                 .load(mListFilms.get(i).getPosterPath())
@@ -65,13 +85,15 @@ public class FilmsAdapter extends RecyclerView.Adapter<FilmsAdapter.MyViewHolder
         TextView descriptionFilm;
         ImageView imageFilm;
         TextView releaseDateFilm;
+        ImageView favoritesHeart;
 
-        MyViewHolder(View view) {
+        MyViewHolder(final View view) {
             super(view);
             titleFilm = view.findViewById(R.id.film_title);
             descriptionFilm = view.findViewById(R.id.film_description);
             imageFilm = view.findViewById(R.id.film_image);
             releaseDateFilm = view.findViewById(R.id.film_release_date);
+            favoritesHeart = view.findViewById(R.id.favorites);
 
             view.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -80,6 +102,29 @@ public class FilmsAdapter extends RecyclerView.Adapter<FilmsAdapter.MyViewHolder
                     Film click = mListFilms.get(position);
                     Snackbar.make(v, click.getTitle(), Snackbar.LENGTH_LONG)
                             .show();
+                }
+            });
+
+            favoritesHeart.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    int position = getAdapterPosition();
+                    Film click = mListFilms.get(position);
+
+                    mEdit = mFavorites.edit();
+                    if (favoritesList.contains(click.getTitle())) {
+                        favoritesList.remove(click.getTitle());
+                        favoritesHeart.setBackgroundResource(R.drawable.ic_heart);
+                    } else {
+                        favoritesList.add(click.getTitle());
+                        favoritesHeart.setBackgroundResource(R.drawable.ic_heart_fill);
+                        Snackbar.make(v, "Добавлено в избранное: " + click.getTitle(), Snackbar.LENGTH_LONG)
+                                .show();
+                    }
+                    mEdit.remove(APP_PREFERENCES);
+                    mEdit.apply();
+                    mEdit.putStringSet(APP_PREFERENCES, favoritesList);
+                    mEdit.apply();
                 }
             });
         }
@@ -91,7 +136,7 @@ public class FilmsAdapter extends RecyclerView.Adapter<FilmsAdapter.MyViewHolder
 
             @SuppressWarnings("unchecked")
             @Override
-            protected void publishResults(CharSequence constraint,FilterResults results) {
+            protected void publishResults(CharSequence constraint, FilterResults results) {
                 mListFilms = (List<Film>) results.values;
                 notifyDataSetChanged();
             }
@@ -100,7 +145,6 @@ public class FilmsAdapter extends RecyclerView.Adapter<FilmsAdapter.MyViewHolder
             protected FilterResults performFiltering(CharSequence constraint) {
                 FilterResults results = new FilterResults();
                 filteredArrList = new ArrayList<>();
-
 
                 if (mOriginalValues == null) {
                     mOriginalValues = new ArrayList<>();

@@ -30,7 +30,9 @@
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:padding="12dp">
+                android:paddingTop="12dp"
+                android:paddingRight="12dp"
+                android:paddingBottom="12dp">
 
                 <TextView
                     android:id="@+id/film_title"
@@ -39,7 +41,8 @@
                     android:layout_height="wrap_content"
                     tools:text="Бегущий по лезвию 2049"
                     android:layout_alignParentTop="true"
-                    android:layout_marginRight="5dp"/>
+                    android:layout_marginRight="5dp"
+                    android:layout_marginLeft="14dp"/>
 
                 <TextView
                     android:id="@+id/film_description"
@@ -49,6 +52,7 @@
                     android:layout_above="@+id/release_date_and_favorites"
                     android:layout_marginTop="8dp"
                     android:layout_marginBottom="8dp"
+                    android:layout_marginLeft="14dp"
                     android:textSize="14sp"
                     android:fontFamily="sans-serif"
                     android:textStyle="normal"
@@ -61,7 +65,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_alignParentBottom="true"
-                    android:gravity="center_vertical">
+                    android:gravity="center_vertical"
+                    android:layout_marginLeft="11dp">
 
                     <ImageView
                         android:id="@+id/ic_calendar"
@@ -84,7 +89,7 @@
                         android:layout_marginStart="2dp" />
 
                     <ImageView
-                        android:id="@+id/ic_heart"
+                        android:id="@+id/favorites"
                         android:layout_width="24dp"
                         android:layout_height="24dp"
                         android:layout_alignParentEnd="true"

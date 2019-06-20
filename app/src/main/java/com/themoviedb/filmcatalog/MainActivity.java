@@ -13,6 +13,7 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -45,8 +46,10 @@ public class MainActivity extends AppCompatActivity {
     private String request;
     private TextView requestTV;
     private LinearLayout checkEmptyIssue;
-    private LinearLayout error;
+    private RelativeLayout error;
     private RelativeLayout parentLayout;
+    private Button refresh;
+    private boolean firstLoad = false;
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
@@ -56,16 +59,7 @@ public class MainActivity extends AppCompatActivity {
 
         initView();
 
-        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                progressBarHorizontal.setVisibility(ProgressBar.VISIBLE);
-                loadJSON();
-            }
-        });
-
         etSearch.addTextChangedListener(new TextWatcher() {
-
             @SuppressLint("SetTextI18n")
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
@@ -109,10 +103,11 @@ public class MainActivity extends AppCompatActivity {
                     films = response.body().getResults();
 
                     initRecyclerView(films);
-
-                    if (swipeRefreshLayout.isRefreshing()) {
-                        swipeRefreshLayout.setRefreshing(false);
+                    if (!firstLoad) {
+                        initPullToRefresh();
+                        firstLoad = true;
                     }
+
                 }
 
                 @Override
@@ -123,6 +118,10 @@ public class MainActivity extends AppCompatActivity {
         } catch (Exception e) {
             errorLoad();
         }
+
+        if (swipeRefreshLayout.isRefreshing()) {
+            swipeRefreshLayout.setRefreshing(false);
+        }
     }
 
     private void initView() {
@@ -131,6 +130,7 @@ public class MainActivity extends AppCompatActivity {
         error = findViewById(R.id.error);
         etSearch = findViewById(R.id.etSearch);
         parentLayout = findViewById(R.id.parentLayout);
+        refresh = findViewById(R.id.refresh);
 
         progressBar = findViewById(R.id.progressBar);
         progressBar.setVisibility(View.VISIBLE);
@@ -139,7 +139,6 @@ public class MainActivity extends AppCompatActivity {
         progressBarHorizontal.setVisibility(View.INVISIBLE);
 
         swipeRefreshLayout = findViewById(R.id.main_content);
-        swipeRefreshLayout.setColorSchemeResources(android.R.color.holo_blue_dark);
         try {
             Field f = swipeRefreshLayout.getClass().getDeclaredField("mCircleView");
             f.setAccessible(true);
@@ -161,15 +160,36 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.smoothScrollToPosition(0);
         LinearLayoutManager layoutManager = new LinearLayoutManager(MainActivity.this);
         recyclerView.setLayoutManager(layoutManager);
+
         progressBar.setVisibility(ProgressBar.INVISIBLE);
         checkEmptyIssue.setVisibility(View.INVISIBLE);
         progressBarHorizontal.setVisibility(ProgressBar.INVISIBLE);
+        error.setVisibility(View.INVISIBLE);
+    }
+
+    private void initPullToRefresh() {
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                progressBarHorizontal.setVisibility(ProgressBar.VISIBLE);
+                loadJSON();
+            }
+        });
     }
 
     private void errorLoad() {
-        error.setVisibility(View.VISIBLE);
-        Snackbar.make(parentLayout, getString(R.string.error_internet), Snackbar.LENGTH_LONG)
-                .show();
+        if (!firstLoad) {
+            error.setVisibility(View.VISIBLE);
+            refresh.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    error.setVisibility(View.INVISIBLE);
+                    progressBar.setVisibility(View.VISIBLE);
+                    loadJSON();
+                }
+            });
+        }
+        Snackbar.make(parentLayout, getString(R.string.error_internet), Snackbar.LENGTH_LONG).show();
         progressBar.setVisibility(ProgressBar.INVISIBLE);
         progressBarHorizontal.setVisibility(ProgressBar.INVISIBLE);
     }
