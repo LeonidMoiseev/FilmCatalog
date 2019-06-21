@@ -3,6 +3,6 @@
     <dimen name="horizontal_margin">8dp</dimen>
     <dimen name="vertical_margin">8dp</dimen>
     <dimen name="card_margin">8dp</dimen>
-    <dimen name="card_height">187dp</dimen>
+    <dimen name="card_height">183dp</dimen>
     <dimen name="image_film_width">119dp</dimen>
 </resources>

@@ -10,4 +10,5 @@
     <color name="dark_grey">#1c1d1f</color>
     <color name="electric_blue">#004fff</color>
     <color name="black__38">#61000000</color>
+    <color name="toolbarColor">#1c1d1e</color>
 </resources>

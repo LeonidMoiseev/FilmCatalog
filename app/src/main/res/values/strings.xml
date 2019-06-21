@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">FilmCatalog</string>
+    <string name="app_name">Каталог фильмов</string>
     <string name="film_name">Film title</string>
     <string name="film_description">Film description</string>
     <string name="release_date">release date</string>

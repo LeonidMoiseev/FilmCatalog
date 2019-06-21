@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/parentLayout"
@@ -11,70 +12,89 @@
     tools:context=".MainActivity"
     tools:showIn="@layout/activity_main">
 
-    <RelativeLayout
-        android:id="@+id/layout_search"
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/myToolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="@dimen/horizontal_margin"
-        android:background="@drawable/et_search"
-        android:elevation="2dp">
-
-        <EditText
-            android:id="@+id/etSearch"
-            android:layout_width="match_parent"
-            android:layout_height="40dp"
-            android:background="@null"
-            android:fontFamily="sans-serif"
-            android:hint="@string/search_by_movie_name"
-            android:lineSpacingExtra="5sp"
-            android:paddingStart="64dp"
-            android:paddingEnd="16dp"
-            android:textColor="@color/black__38"
-            android:textSize="15sp"
-            android:textStyle="normal" />
-
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_centerVertical="true"
-            android:layout_marginStart="16dp"
-            android:contentDescription="@string/film_name"
-            android:scaleType="center"
-            android:src="@drawable/ic_search" />
-
-    </RelativeLayout>
-
-    <android.support.v4.widget.NestedScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_below="@+id/layout_search">
+        android:background="@color/toolbarColor"
+        android:elevation="4dp">
 
         <RelativeLayout
+            android:id="@+id/layout_search"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/horizontal_margin"
+            android:background="@drawable/et_search">
 
-            <ProgressBar
-                android:id="@+id/progressBarHorizontal"
-                style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+            <EditText
+                android:id="@+id/etSearch"
                 android:layout_width="match_parent"
-                android:layout_height="4dp"
-                android:indeterminate="true"
-                android:scaleY="4"/>
+                android:layout_height="40dp"
+                android:background="@null"
+                android:fontFamily="sans-serif"
+                android:hint="@string/search_by_movie_name"
+                android:lineSpacingExtra="5sp"
+                android:paddingStart="64dp"
+                android:paddingEnd="16dp"
+                android:textColor="@color/black__38"
+                android:textSize="15sp"
+                android:textStyle="normal" />
 
-            <android.support.v7.widget.RecyclerView
-                android:id="@+id/recycler_view"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/progressBarHorizontal"
-                android:clipToPadding="false"
-                android:scrollbars="vertical"
-                android:layout_marginTop="8dp">
-
-            </android.support.v7.widget.RecyclerView>
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_centerVertical="true"
+                android:layout_marginStart="16dp"
+                android:contentDescription="@string/film_name"
+                android:scaleType="center"
+                android:src="@drawable/ic_search" />
 
         </RelativeLayout>
 
-    </android.support.v4.widget.NestedScrollView>
+    </android.support.v7.widget.Toolbar>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/myToolbar">
+
+        <android.support.v4.widget.NestedScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <ProgressBar
+                    android:id="@+id/progressBarHorizontal"
+                    style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="4dp"
+                    android:indeterminate="true"
+                    android:scaleY="4"
+                    android:visibility="invisible"/>
+
+                <android.support.v7.widget.RecyclerView
+                    android:id="@+id/recycler_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/progressBarHorizontal"
+                    android:clipToPadding="false"
+                    android:scrollbars="vertical"
+                    android:layout_marginTop="8dp">
+
+                </android.support.v7.widget.RecyclerView>
+
+            </RelativeLayout>
+
+        </android.support.v4.widget.NestedScrollView>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="4dp"
+            android:background="@drawable/toolbar_dropshadow"/>
+    </FrameLayout>
 
     <ProgressBar
         android:id="@+id/progressBar"
@@ -97,7 +117,8 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:layout_marginBottom="30dp"
-            android:src="@drawable/ic_big_search" />
+            android:src="@drawable/ic_big_search"
+            android:contentDescription="@string/film_description"/>
 
         <TextView
             android:id="@+id/request"
@@ -133,10 +154,11 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginBottom="30dp"
-                android:src="@drawable/ic_alert_triangle"/>
+                android:src="@drawable/ic_alert_triangle"
+                android:contentDescription="@string/film_description"/>
 
             <TextView
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="@dimen/horizontal_margin"
                 android:layout_marginRight="@dimen/horizontal_margin"

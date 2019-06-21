@@ -47,6 +47,9 @@ public class FilmsAdapter extends RecyclerView.Adapter<FilmsAdapter.MyViewHolder
         View view = LayoutInflater.from(viewGroup.getContext())
                 .inflate(R.layout.film_card, viewGroup, false);
 
+        /*
+        * Получение списка названий фильмов, добавленнных в избранное
+        * */
         mFavorites = PreferenceManager.getDefaultSharedPreferences(mContext);
         if (mFavorites.contains(APP_PREFERENCES)) {
             favoritesList = mFavorites.getStringSet(APP_PREFERENCES, null);
@@ -62,9 +65,13 @@ public class FilmsAdapter extends RecyclerView.Adapter<FilmsAdapter.MyViewHolder
         viewHolder.titleFilm.setText(mListFilms.get(i).getTitle());
         viewHolder.descriptionFilm.setText(mListFilms.get(i).getOverview());
         viewHolder.releaseDateFilm.setText(mListFilms.get(i).getReleaseDate());
+        /*
+        * Если название фильма есть в списке избранных,
+        * устанавливается изображение с заполненным сердечком
+        * */
         if (favoritesList.contains(mListFilms.get(i).getTitle())) {
             viewHolder.favoritesHeart.setBackgroundResource(R.drawable.ic_heart_fill);
-        }
+        } else viewHolder.favoritesHeart.setBackgroundResource(R.drawable.ic_heart);
 
         Glide.with(mContext)
                 .load(mListFilms.get(i).getPosterPath())

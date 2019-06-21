@@ -28,6 +28,7 @@ import com.themoviedb.filmcatalog.model.Film;
 import com.themoviedb.filmcatalog.model.FilmsResponse;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.List;
 
 import retrofit2.Callback;
@@ -40,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
     private SwipeRefreshLayout swipeRefreshLayout;
     private FilmsAdapter filmsAdapter;
     private EditText etSearch;
-    private List<Film> films;
+    private ArrayList<? extends Film> films;
     private ProgressBar progressBar;
     private ProgressBar progressBarHorizontal;
     private String request;
@@ -50,8 +51,13 @@ public class MainActivity extends AppCompatActivity {
     private RelativeLayout parentLayout;
     private Button refresh;
     private boolean firstLoad = false;
+    private boolean errorLoad = false;
 
-    @SuppressLint("ClickableViewAccessibility")
+    private static final String STATE_LIST = "StateAdapterData";
+    private static final String STATE_FIRST_LOAD = "StateFirstLoad";
+    private static final String STATE_REQUEST = "StateRequest";
+    private static final String STATE_ERROR_LOAD = "StateErrorLoad";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -59,35 +65,28 @@ public class MainActivity extends AppCompatActivity {
 
         initView();
 
-        etSearch.addTextChangedListener(new TextWatcher() {
-            @SuppressLint("SetTextI18n")
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                try {
-                    request = etSearch.getText().toString().trim();
-                    filmsAdapter.getFilter().filter(s.toString());
-                    recyclerView.setAdapter(filmsAdapter);
-                    if (filmsAdapter.getSizeList() == 0 && !request.isEmpty()) {
-                        checkEmptyIssue.setVisibility(View.VISIBLE);
-                        requestTV.setText(getString(R.string.empty_issue_1) + request + getString(R.string.empty_issue_2));
-                    } else {
-                        checkEmptyIssue.setVisibility(View.INVISIBLE);
-                    }
-                }catch (NullPointerException ex) {
-                    Log.d("error", "changeOrientationError");
-                }
+        if (savedInstanceState != null) {
+            /*
+             * errorLoad - принимает значение в зависимости от того, была ли ошибка загрузки данных
+             * при первом открытии приложения. Если ошибка была и пользователь повернул экран,
+             * на активити будет показано тоже самое, что и перед поворотом экрана.
+             * */
+            errorLoad = savedInstanceState.getBoolean(STATE_ERROR_LOAD);
+            if (!errorLoad) {
+                films = savedInstanceState.getParcelableArrayList(STATE_LIST);
+                firstLoad = savedInstanceState.getBoolean(STATE_FIRST_LOAD);
+                request = savedInstanceState.getString(STATE_REQUEST);
+                initSearchEditText();
+                initRecyclerView((List<Film>) films);
+                initPullToRefresh();
+            } else {
+                buttonRefreshErrorLoad();
+                initSearchEditText();
             }
-
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count,int after) {
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-            }
-        });
-
-        loadJSON();
+        } else {
+            loadJSON();
+            initSearchEditText();
+        }
     }
 
     private void loadJSON() {
@@ -100,12 +99,16 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onResponse(@NonNull Call<FilmsResponse> call, @NonNull Response<FilmsResponse> response) {
                     assert response.body() != null;
-                    films = response.body().getResults();
+                    films = (ArrayList<? extends Film>) response.body().getResults();
 
-                    initRecyclerView(films);
+                    initRecyclerView((List<Film>) films);
+                    /*
+                     * Если список успешно загрузился в первый раз, инициализируется pull-to-refresh
+                     * */
                     if (!firstLoad) {
                         initPullToRefresh();
                         firstLoad = true;
+                        errorLoad = false;
                     }
 
                 }
@@ -124,6 +127,50 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void initSearchEditText() {
+        etSearch.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                try {
+                    request = etSearch.getText().toString().trim();
+                    filmsAdapter.getFilter().filter(s.toString());
+                    recyclerView.setAdapter(filmsAdapter);
+                } catch (NullPointerException ex) {
+                    Log.d("error", "changeOrientationError");
+                }
+            }
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @SuppressLint("SetTextI18n")
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (getCurrentFocus() == etSearch) {
+                    try {
+                        if (filmsAdapter.getSizeList() == 0 && !request.isEmpty()) {
+
+                            showErrorEmptyIssue();
+
+                        } else {
+                            checkEmptyIssue.setVisibility(View.INVISIBLE);
+                        }
+                    } catch (NullPointerException ex) {
+                        Log.d("error", "changeOrientationError");
+                    }
+                }
+            }
+        });
+    }
+
+    @SuppressLint("SetTextI18n")
+    private void showErrorEmptyIssue() {
+        checkEmptyIssue.setVisibility(View.VISIBLE);
+        requestTV.setText(getString(R.string.empty_issue_1) + request
+                + getString(R.string.empty_issue_2));
+    }
+
     private void initView() {
         requestTV = findViewById(R.id.request);
         checkEmptyIssue = findViewById(R.id.empty_issue);
@@ -139,10 +186,13 @@ public class MainActivity extends AppCompatActivity {
         progressBarHorizontal.setVisibility(View.INVISIBLE);
 
         swipeRefreshLayout = findViewById(R.id.main_content);
+        /*
+         * Удаляется Progress Spinner из функциональности SwipeRefreshLayout
+         * */
         try {
             Field f = swipeRefreshLayout.getClass().getDeclaredField("mCircleView");
             f.setAccessible(true);
-            ImageView img = (ImageView)f.get(swipeRefreshLayout);
+            ImageView img = (ImageView) f.get(swipeRefreshLayout);
             img.setAlpha(0.0f);
         } catch (NoSuchFieldException | IllegalAccessException e) {
             e.printStackTrace();
@@ -178,19 +228,38 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void errorLoad() {
+        /*
+         * Если при первой загрузки контента возникает ошибка,
+         * на экране показывается сообщение об ошибке и кнопка с возможностью повторить запрос
+         * */
         if (!firstLoad) {
-            error.setVisibility(View.VISIBLE);
-            refresh.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    error.setVisibility(View.INVISIBLE);
-                    progressBar.setVisibility(View.VISIBLE);
-                    loadJSON();
-                }
-            });
+            errorLoad = true;
+            buttonRefreshErrorLoad();
         }
         Snackbar.make(parentLayout, getString(R.string.error_internet), Snackbar.LENGTH_LONG).show();
         progressBar.setVisibility(ProgressBar.INVISIBLE);
         progressBarHorizontal.setVisibility(ProgressBar.INVISIBLE);
+    }
+
+    private void buttonRefreshErrorLoad() {
+        error.setVisibility(View.VISIBLE);
+        progressBar.setVisibility(View.INVISIBLE);
+        refresh.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                error.setVisibility(View.INVISIBLE);
+                progressBar.setVisibility(View.VISIBLE);
+                loadJSON();
+            }
+        });
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        outState.putParcelableArrayList(STATE_LIST, films);
+        outState.putBoolean(STATE_FIRST_LOAD, firstLoad);
+        outState.putString(STATE_REQUEST, request);
+        outState.putBoolean(STATE_ERROR_LOAD, errorLoad);
+        super.onSaveInstanceState(outState);
     }
 }
